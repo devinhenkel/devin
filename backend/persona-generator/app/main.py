@@ -16,6 +16,13 @@ client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 class ProductDescription(BaseModel):
     description: str
 
+class ImageGenerationRequest(BaseModel):
+    name: str
+    age: int
+    gender: str
+    occupation: str
+    bio: str
+
 class Persona(BaseModel):
     name: str
     age: int
@@ -25,6 +32,7 @@ class Persona(BaseModel):
     bio: str
     goals: List[str]
     frustrations: List[str]
+    profilePicture: str | None = None
 
 app = FastAPI()
 
@@ -90,4 +98,32 @@ Make sure the persona is realistic and relevant to the product. Include specific
         raise HTTPException(
             status_code=500,
             detail=f"OpenAI API error: {str(e)}"
+        )
+
+@app.post("/generate-image")
+async def generate_image(request: ImageGenerationRequest):
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+
+    try:
+        # Create a detailed prompt for DALL-E
+        prompt = f"""Professional headshot photograph of a {request.age} year old {request.gender} {request.occupation} named {request.name}.
+        They look {request.bio}
+        The photo should be well-lit, professional quality, on a neutral background."""
+
+        response = await client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+
+        image_url = response.data[0].url
+        return {"url": image_url}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Image generation error: {str(e)}"
         )
