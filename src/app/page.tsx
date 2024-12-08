@@ -1,113 +1,339 @@
-import Image from 'next/image'
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Container,
+  Heading,
+  SimpleGrid,
+  Card,
+  CardBody,
+  Text,
+  IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  VStack,
+  HStack,
+  Input,
+  Textarea,
+  Button,
+  FormControl,
+  FormLabel,
+  List,
+  ListItem,
+  ListIcon,
+} from '@chakra-ui/react';
+import { AddIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
+
+interface Persona {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  occupation: string;
+  location: string;
+  bio: string;
+  goals: string[];
+  frustrations: string[];
+}
 
 export default function Home() {
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isCreating, setIsCreating] = useState(false);
+  const [newPersona, setNewPersona] = useState<Partial<Persona>>({
+    goals: [],
+    frustrations: [],
+  });
+
+  const [newGoal, setNewGoal] = useState('');
+  const [newFrustration, setNewFrustration] = useState('');
+
+  const handleCreatePersona = () => {
+    setIsCreating(true);
+    setNewPersona({
+      goals: [],
+      frustrations: [],
+    });
+    onOpen();
+  };
+
+  const handleSavePersona = () => {
+    if (newPersona.name) {
+      const persona: Persona = {
+        id: Date.now().toString(),
+        name: newPersona.name,
+        age: Number(newPersona.age) || 0,
+        gender: newPersona.gender || '',
+        occupation: newPersona.occupation || '',
+        location: newPersona.location || '',
+        bio: newPersona.bio || '',
+        goals: newPersona.goals || [],
+        frustrations: newPersona.frustrations || [],
+      };
+      setPersonas([...personas, persona]);
+      onClose();
+      setIsCreating(false);
+    }
+  };
+
+  const handleViewPersona = (persona: Persona) => {
+    setSelectedPersona(persona);
+    setIsCreating(false);
+    onOpen();
+  };
+
+  const handleAddGoal = () => {
+    if (newGoal.trim()) {
+      setNewPersona({
+        ...newPersona,
+        goals: [...(newPersona.goals || []), newGoal.trim()],
+      });
+      setNewGoal('');
+    }
+  };
+
+  const handleAddFrustration = () => {
+    if (newFrustration.trim()) {
+      setNewPersona({
+        ...newPersona,
+        frustrations: [...(newPersona.frustrations || []), newFrustration.trim()],
+      });
+      setNewFrustration('');
+    }
+  };
+
+  const handleRemoveGoal = (index: number) => {
+    setNewPersona({
+      ...newPersona,
+      goals: (newPersona.goals || []).filter((_, i) => i !== index),
+    });
+  };
+
+  const handleRemoveFrustration = (index: number) => {
+    setNewPersona({
+      ...newPersona,
+      frustrations: (newPersona.frustrations || []).filter((_, i) => i !== index),
+    });
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <Container maxW="container.xl" py={8}>
+      <HStack justify="space-between" mb={6}>
+        <Heading>UX Persona Generator</Heading>
+        <IconButton
+          aria-label="Create new persona"
+          icon={<AddIcon />}
+          onClick={handleCreatePersona}
+          colorScheme="blue"
         />
-      </div>
+      </HStack>
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+        {personas.map((persona) => (
+          <Card
+            key={persona.id}
+            cursor="pointer"
+            onClick={() => handleViewPersona(persona)}
+            _hover={{ shadow: 'lg' }}
+          >
+            <CardBody>
+              <VStack align="start">
+                <Heading size="md">{persona.name}</Heading>
+                <Text>{persona.occupation}</Text>
+                <Text fontSize="sm" color="gray.500">
+                  {persona.location}
+                </Text>
+              </VStack>
+            </CardBody>
+          </Card>
+        ))}
+      </SimpleGrid>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {isCreating ? 'Create New Persona' : selectedPersona?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {isCreating ? (
+              <VStack spacing={4} align="stretch">
+                <FormControl>
+                  <FormLabel>Name</FormLabel>
+                  <Input
+                    value={newPersona.name || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, name: e.target.value })
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Age</FormLabel>
+                  <Input
+                    type="number"
+                    value={newPersona.age || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, age: Number(e.target.value) })
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Gender</FormLabel>
+                  <Input
+                    value={newPersona.gender || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, gender: e.target.value })
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Occupation</FormLabel>
+                  <Input
+                    value={newPersona.occupation || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, occupation: e.target.value })
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Location</FormLabel>
+                  <Input
+                    value={newPersona.location || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, location: e.target.value })
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Bio</FormLabel>
+                  <Textarea
+                    value={newPersona.bio || ''}
+                    onChange={(e) =>
+                      setNewPersona({ ...newPersona, bio: e.target.value })
+                    }
+                  />
+                </FormControl>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
+                <FormControl>
+                  <FormLabel>Goals</FormLabel>
+                  <List spacing={2}>
+                    {newPersona.goals?.map((goal, index) => (
+                      <ListItem key={index}>
+                        <HStack>
+                          <ListIcon as={CheckIcon} color="green.500" />
+                          <Text flex="1">{goal}</Text>
+                          <IconButton
+                            size="sm"
+                            icon={<CloseIcon />}
+                            aria-label="Remove goal"
+                            onClick={() => handleRemoveGoal(index)}
+                          />
+                        </HStack>
+                      </ListItem>
+                    ))}
+                  </List>
+                  <HStack mt={2}>
+                    <Input
+                      value={newGoal}
+                      onChange={(e) => setNewGoal(e.target.value)}
+                      placeholder="Add a goal"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
+                    />
+                    <IconButton
+                      icon={<AddIcon />}
+                      aria-label="Add goal"
+                      onClick={handleAddGoal}
+                    />
+                  </HStack>
+                </FormControl>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+                <FormControl>
+                  <FormLabel>Frustrations</FormLabel>
+                  <List spacing={2}>
+                    {newPersona.frustrations?.map((frustration, index) => (
+                      <ListItem key={index}>
+                        <HStack>
+                          <ListIcon as={CloseIcon} color="red.500" />
+                          <Text flex="1">{frustration}</Text>
+                          <IconButton
+                            size="sm"
+                            icon={<CloseIcon />}
+                            aria-label="Remove frustration"
+                            onClick={() => handleRemoveFrustration(index)}
+                          />
+                        </HStack>
+                      </ListItem>
+                    ))}
+                  </List>
+                  <HStack mt={2}>
+                    <Input
+                      value={newFrustration}
+                      onChange={(e) => setNewFrustration(e.target.value)}
+                      placeholder="Add a frustration"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddFrustration()}
+                    />
+                    <IconButton
+                      icon={<AddIcon />}
+                      aria-label="Add frustration"
+                      onClick={handleAddFrustration}
+                    />
+                  </HStack>
+                </FormControl>
+
+                <Button colorScheme="blue" onClick={handleSavePersona}>
+                  Save Persona
+                </Button>
+              </VStack>
+            ) : (
+              selectedPersona && (
+                <VStack align="start" spacing={4}>
+                  <Text><strong>Age:</strong> {selectedPersona.age}</Text>
+                  <Text><strong>Gender:</strong> {selectedPersona.gender}</Text>
+                  <Text><strong>Occupation:</strong> {selectedPersona.occupation}</Text>
+                  <Text><strong>Location:</strong> {selectedPersona.location}</Text>
+                  <Text><strong>Bio:</strong> {selectedPersona.bio}</Text>
+
+                  <Box>
+                    <Text mb={2}><strong>Goals:</strong></Text>
+                    <List spacing={2}>
+                      {selectedPersona.goals.map((goal, index) => (
+                        <ListItem key={index}>
+                          <HStack>
+                            <ListIcon as={CheckIcon} color="green.500" />
+                            <Text>{goal}</Text>
+                          </HStack>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+
+                  <Box>
+                    <Text mb={2}><strong>Frustrations:</strong></Text>
+                    <List spacing={2}>
+                      {selectedPersona.frustrations.map((frustration, index) => (
+                        <ListItem key={index}>
+                          <HStack>
+                            <ListIcon as={CloseIcon} color="red.500" />
+                            <Text>{frustration}</Text>
+                          </HStack>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                </VStack>
+              )
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </Container>
+  );
 }
