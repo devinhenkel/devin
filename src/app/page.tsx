@@ -27,8 +27,10 @@ import {
   List,
   ListItem,
   ListIcon,
+  useToast,
+  Spinner,
 } from '@chakra-ui/react';
-import { AddIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
+import { AddIcon, CheckIcon, CloseIcon, RepeatIcon } from '@chakra-ui/icons';
 
 interface Persona {
   id: string;
@@ -42,18 +44,24 @@ interface Persona {
   frustrations: string[];
 }
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://persona-generator-bbzhffsc.fly.dev';
+
 export default function Home() {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isCreating, setIsCreating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [productDescription, setProductDescription] = useState('');
   const [newPersona, setNewPersona] = useState<Partial<Persona>>({
     goals: [],
     frustrations: [],
   });
+  const toast = useToast();
 
   const [newGoal, setNewGoal] = useState('');
   const [newFrustration, setNewFrustration] = useState('');
+  const [regeneratingFields, setRegeneratingFields] = useState<Record<string, boolean>>({});
 
   const handleCreatePersona = () => {
     setIsCreating(true);
@@ -61,7 +69,82 @@ export default function Home() {
       goals: [],
       frustrations: [],
     });
+    setProductDescription('');
     onOpen();
+  };
+
+  const handleGeneratePersona = async () => {
+    if (!productDescription.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a product description',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/generate-persona`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: productDescription }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate persona');
+      }
+
+      const data = await response.json();
+      setNewPersona(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to generate persona. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerateField = async (field: string) => {
+    setRegeneratingFields(prev => ({ ...prev, [field]: true }));
+    try {
+      const response = await fetch(`${BACKEND_URL}/generate-persona`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: productDescription,
+          field,
+          currentPersona: newPersona,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate field');
+      }
+
+      const data = await response.json();
+      setNewPersona(prev => ({
+        ...prev,
+        [field]: data[field],
+      }));
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: `Failed to regenerate ${field}. Please try again.`,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setRegeneratingFields(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   const handleSavePersona = () => {
@@ -167,130 +250,234 @@ export default function Home() {
             {isCreating ? (
               <VStack spacing={4} align="stretch">
                 <FormControl>
-                  <FormLabel>Name</FormLabel>
-                  <Input
-                    value={newPersona.name || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, name: e.target.value })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Age</FormLabel>
-                  <Input
-                    type="number"
-                    value={newPersona.age || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, age: Number(e.target.value) })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Gender</FormLabel>
-                  <Input
-                    value={newPersona.gender || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, gender: e.target.value })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Occupation</FormLabel>
-                  <Input
-                    value={newPersona.occupation || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, occupation: e.target.value })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Location</FormLabel>
-                  <Input
-                    value={newPersona.location || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, location: e.target.value })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Bio</FormLabel>
+                  <FormLabel>Product Description</FormLabel>
                   <Textarea
-                    value={newPersona.bio || ''}
-                    onChange={(e) =>
-                      setNewPersona({ ...newPersona, bio: e.target.value })
-                    }
+                    value={productDescription}
+                    onChange={(e) => setProductDescription(e.target.value)}
+                    placeholder="Describe your product and its target users..."
                   />
                 </FormControl>
-
-                <FormControl>
-                  <FormLabel>Goals</FormLabel>
-                  <List spacing={2}>
-                    {newPersona.goals?.map((goal, index) => (
-                      <ListItem key={index}>
-                        <HStack>
-                          <ListIcon as={CheckIcon} color="green.500" />
-                          <Text flex="1">{goal}</Text>
-                          <IconButton
-                            size="sm"
-                            icon={<CloseIcon />}
-                            aria-label="Remove goal"
-                            onClick={() => handleRemoveGoal(index)}
-                          />
-                        </HStack>
-                      </ListItem>
-                    ))}
-                  </List>
-                  <HStack mt={2}>
-                    <Input
-                      value={newGoal}
-                      onChange={(e) => setNewGoal(e.target.value)}
-                      placeholder="Add a goal"
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
-                    />
-                    <IconButton
-                      icon={<AddIcon />}
-                      aria-label="Add goal"
-                      onClick={handleAddGoal}
-                    />
-                  </HStack>
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Frustrations</FormLabel>
-                  <List spacing={2}>
-                    {newPersona.frustrations?.map((frustration, index) => (
-                      <ListItem key={index}>
-                        <HStack>
-                          <ListIcon as={CloseIcon} color="red.500" />
-                          <Text flex="1">{frustration}</Text>
-                          <IconButton
-                            size="sm"
-                            icon={<CloseIcon />}
-                            aria-label="Remove frustration"
-                            onClick={() => handleRemoveFrustration(index)}
-                          />
-                        </HStack>
-                      </ListItem>
-                    ))}
-                  </List>
-                  <HStack mt={2}>
-                    <Input
-                      value={newFrustration}
-                      onChange={(e) => setNewFrustration(e.target.value)}
-                      placeholder="Add a frustration"
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddFrustration()}
-                    />
-                    <IconButton
-                      icon={<AddIcon />}
-                      aria-label="Add frustration"
-                      onClick={handleAddFrustration}
-                    />
-                  </HStack>
-                </FormControl>
-
-                <Button colorScheme="blue" onClick={handleSavePersona}>
-                  Save Persona
+                <Button
+                  colorScheme="blue"
+                  onClick={handleGeneratePersona}
+                  isLoading={isGenerating}
+                  mb={4}
+                >
+                  Generate Persona
                 </Button>
+
+                {Object.keys(newPersona).length > 2 && (
+                  <>
+                    <FormControl>
+                      <FormLabel>Name</FormLabel>
+                      <HStack>
+                        <Input
+                          flex="1"
+                          value={newPersona.name || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, name: e.target.value })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.name ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate name"
+                          onClick={() => handleRegenerateField('name')}
+                          isDisabled={regeneratingFields.name}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Age</FormLabel>
+                      <HStack>
+                        <Input
+                          flex="1"
+                          type="number"
+                          value={newPersona.age || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, age: Number(e.target.value) })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.age ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate age"
+                          onClick={() => handleRegenerateField('age')}
+                          isDisabled={regeneratingFields.age}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Gender</FormLabel>
+                      <HStack>
+                        <Input
+                          flex="1"
+                          value={newPersona.gender || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, gender: e.target.value })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.gender ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate gender"
+                          onClick={() => handleRegenerateField('gender')}
+                          isDisabled={regeneratingFields.gender}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Occupation</FormLabel>
+                      <HStack>
+                        <Input
+                          flex="1"
+                          value={newPersona.occupation || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, occupation: e.target.value })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.occupation ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate occupation"
+                          onClick={() => handleRegenerateField('occupation')}
+                          isDisabled={regeneratingFields.occupation}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Location</FormLabel>
+                      <HStack>
+                        <Input
+                          flex="1"
+                          value={newPersona.location || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, location: e.target.value })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.location ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate location"
+                          onClick={() => handleRegenerateField('location')}
+                          isDisabled={regeneratingFields.location}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Bio</FormLabel>
+                      <VStack align="stretch">
+                        <Textarea
+                          value={newPersona.bio || ''}
+                          onChange={(e) =>
+                            setNewPersona({ ...newPersona, bio: e.target.value })
+                          }
+                        />
+                        <IconButton
+                          icon={regeneratingFields.bio ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate bio"
+                          onClick={() => handleRegenerateField('bio')}
+                          isDisabled={regeneratingFields.bio}
+                          alignSelf="flex-end"
+                        />
+                      </VStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Goals</FormLabel>
+                      <VStack align="stretch" spacing={2}>
+                        <HStack>
+                          <Text flex="1">Goals List</Text>
+                          <IconButton
+                            icon={regeneratingFields.goals ? <Spinner size="sm" /> : <RepeatIcon />}
+                            aria-label="Regenerate all goals"
+                            onClick={() => handleRegenerateField('goals')}
+                            isDisabled={regeneratingFields.goals}
+                            size="sm"
+                          />
+                        </HStack>
+                        <List spacing={2}>
+                          {newPersona.goals?.map((goal, index) => (
+                            <ListItem key={index}>
+                              <HStack>
+                                <ListIcon as={CheckIcon} color="green.500" />
+                                <Text flex="1">{goal}</Text>
+                                <IconButton
+                                  size="sm"
+                                  icon={<CloseIcon />}
+                                  aria-label="Remove goal"
+                                  onClick={() => handleRemoveGoal(index)}
+                                />
+                              </HStack>
+                            </ListItem>
+                          ))}
+                        </List>
+                        <HStack mt={2}>
+                          <Input
+                            value={newGoal}
+                            onChange={(e) => setNewGoal(e.target.value)}
+                            placeholder="Add a goal"
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
+                          />
+                          <IconButton
+                            icon={<AddIcon />}
+                            aria-label="Add goal"
+                            onClick={handleAddGoal}
+                          />
+                        </HStack>
+                      </VStack>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Frustrations</FormLabel>
+                      <VStack align="stretch" spacing={2}>
+                        <HStack>
+                          <Text flex="1">Frustrations List</Text>
+                          <IconButton
+                            icon={regeneratingFields.frustrations ? <Spinner size="sm" /> : <RepeatIcon />}
+                            aria-label="Regenerate all frustrations"
+                            onClick={() => handleRegenerateField('frustrations')}
+                            isDisabled={regeneratingFields.frustrations}
+                            size="sm"
+                          />
+                        </HStack>
+                        <List spacing={2}>
+                          {newPersona.frustrations?.map((frustration, index) => (
+                            <ListItem key={index}>
+                              <HStack>
+                                <ListIcon as={CloseIcon} color="red.500" />
+                                <Text flex="1">{frustration}</Text>
+                                <IconButton
+                                  size="sm"
+                                  icon={<CloseIcon />}
+                                  aria-label="Remove frustration"
+                                  onClick={() => handleRemoveFrustration(index)}
+                                />
+                              </HStack>
+                            </ListItem>
+                          ))}
+                        </List>
+                        <HStack mt={2}>
+                          <Input
+                            value={newFrustration}
+                            onChange={(e) => setNewFrustration(e.target.value)}
+                            placeholder="Add a frustration"
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddFrustration()}
+                          />
+                          <IconButton
+                            icon={<AddIcon />}
+                            aria-label="Add frustration"
+                            onClick={handleAddFrustration}
+                          />
+                        </HStack>
+                      </VStack>
+                    </FormControl>
+
+                    <Button colorScheme="blue" onClick={handleSavePersona}>
+                      Save Persona
+                    </Button>
+                  </>
+                )}
               </VStack>
             ) : (
               selectedPersona && (

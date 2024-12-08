@@ -4,6 +4,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  env: {
+    BACKEND_URL: process.env.BACKEND_URL,
+  },
 }
 
 module.exports = nextConfig
