@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configure OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ProductDescription(BaseModel):
     description: str
@@ -43,7 +43,7 @@ async def healthz():
 
 @app.post("/generate-persona")
 async def generate_persona(product: ProductDescription) -> Persona:
-    if not openai.api_key:
+    if not os.getenv("OPENAI_API_KEY"):
         raise HTTPException(status_code=500, detail="OpenAI API key not configured")
 
     try:
@@ -65,7 +65,7 @@ Provide the information in the following JSON format:
 
 Make sure the persona is realistic and relevant to the product. Include specific details in the bio and make goals and frustrations relevant to their profession and the product."""
 
-        response = await openai.ChatCompletion.acreate(
+        response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a UX researcher creating detailed user personas."},
@@ -86,13 +86,8 @@ Make sure the persona is realistic and relevant to the product. Include specific
                 detail=f"Failed to parse LLM response: {str(e)}"
             )
 
-    except openai.error.OpenAIError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"OpenAI API error: {str(e)}"
-        )
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Unexpected error: {str(e)}"
+            detail=f"OpenAI API error: {str(e)}"
         )
