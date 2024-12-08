@@ -29,6 +29,7 @@ import {
   ListIcon,
   useToast,
   Spinner,
+  Avatar,
 } from '@chakra-ui/react';
 import { AddIcon, CheckIcon, CloseIcon, RepeatIcon } from '@chakra-ui/icons';
 
@@ -42,6 +43,7 @@ interface Persona {
   bio: string;
   goals: string[];
   frustrations: string[];
+  profilePicture?: string;  // URL to stored image
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://persona-generator-bbzhffsc.fly.dev';
@@ -227,13 +229,20 @@ export default function Home() {
             _hover={{ shadow: 'lg' }}
           >
             <CardBody>
-              <VStack align="start">
-                <Heading size="md">{persona.name}</Heading>
-                <Text>{persona.occupation}</Text>
-                <Text fontSize="sm" color="gray.500">
-                  {persona.location}
-                </Text>
-              </VStack>
+              <HStack spacing={4}>
+                <Avatar
+                  size="lg"
+                  src={persona.profilePicture}
+                  name={persona.name}
+                />
+                <VStack align="start">
+                  <Heading size="md">{persona.name}</Heading>
+                  <Text>{persona.occupation}</Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {persona.location}
+                  </Text>
+                </VStack>
+              </HStack>
             </CardBody>
           </Card>
         ))}
@@ -268,6 +277,25 @@ export default function Home() {
 
                 {Object.keys(newPersona).length > 2 && (
                   <>
+                    <FormControl>
+                      <FormLabel>Profile Picture</FormLabel>
+                      <VStack align="stretch">
+                        <Avatar
+                          size="2xl"
+                          src={newPersona.profilePicture}
+                          name={newPersona.name}
+                          mb={2}
+                        />
+                        <IconButton
+                          icon={regeneratingFields.profilePicture ? <Spinner size="sm" /> : <RepeatIcon />}
+                          aria-label="Regenerate profile picture"
+                          onClick={() => handleRegenerateField('profilePicture')}
+                          isDisabled={regeneratingFields.profilePicture}
+                          alignSelf="flex-end"
+                        />
+                      </VStack>
+                    </FormControl>
+
                     <FormControl>
                       <FormLabel>Name</FormLabel>
                       <HStack>
@@ -482,6 +510,12 @@ export default function Home() {
             ) : (
               selectedPersona && (
                 <VStack align="start" spacing={4}>
+                  <Avatar
+                    size="2xl"
+                    src={selectedPersona.profilePicture}
+                    name={selectedPersona.name}
+                    mb={4}
+                  />
                   <Text><strong>Age:</strong> {selectedPersona.age}</Text>
                   <Text><strong>Gender:</strong> {selectedPersona.gender}</Text>
                   <Text><strong>Occupation:</strong> {selectedPersona.occupation}</Text>
