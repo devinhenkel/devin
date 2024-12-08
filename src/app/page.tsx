@@ -161,6 +161,7 @@ export default function Home() {
         bio: newPersona.bio || '',
         goals: newPersona.goals || [],
         frustrations: newPersona.frustrations || [],
+        profilePicture: newPersona.profilePicture
       };
       setPersonas([...personas, persona]);
       onClose();
