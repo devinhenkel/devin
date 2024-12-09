@@ -89,6 +89,7 @@ export default function Home() {
 
     setIsGenerating(true);
     try {
+      // Generate persona
       const response = await fetch(`${BACKEND_URL}/generate-persona`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,6 +101,25 @@ export default function Home() {
       }
 
       const data = await response.json();
+
+      // Generate profile picture
+      const imageResponse = await fetch(`${BACKEND_URL}/generate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          age: data.age,
+          gender: data.gender,
+          occupation: data.occupation,
+          bio: data.bio
+        }),
+      });
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        data.profilePicture = imageData.url;
+      }
+
       setNewPersona(data);
     } catch (error) {
       toast({
@@ -117,25 +137,49 @@ export default function Home() {
   const handleRegenerateField = async (field: string) => {
     setRegeneratingFields(prev => ({ ...prev, [field]: true }));
     try {
-      const response = await fetch(`${BACKEND_URL}/generate-persona`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: productDescription,
-          field,
-          currentPersona: newPersona,
-        }),
-      });
+      if (field === 'profilePicture') {
+        const response = await fetch(`${BACKEND_URL}/generate-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newPersona.name,
+            age: newPersona.age,
+            gender: newPersona.gender,
+            occupation: newPersona.occupation,
+            bio: newPersona.bio
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to regenerate field');
+        if (!response.ok) {
+          throw new Error('Failed to regenerate profile picture');
+        }
+
+        const data = await response.json();
+        setNewPersona(prev => ({
+          ...prev,
+          profilePicture: data.url,
+        }));
+      } else {
+        const response = await fetch(`${BACKEND_URL}/generate-persona`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: productDescription,
+            field,
+            currentPersona: newPersona,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to regenerate field');
+        }
+
+        const data = await response.json();
+        setNewPersona(prev => ({
+          ...prev,
+          [field]: data[field],
+        }));
       }
-
-      const data = await response.json();
-      setNewPersona(prev => ({
-        ...prev,
-        [field]: data[field],
-      }));
     } catch (error) {
       toast({
         title: 'Error',
