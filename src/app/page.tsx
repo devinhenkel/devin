@@ -71,7 +71,6 @@ export default function Home() {
       goals: [],
       frustrations: [],
     });
-    setProductDescription('');
     onOpen();
   };
 
@@ -210,43 +209,59 @@ export default function Home() {
 
   return (
     <Container maxW="container.xl" py={8}>
-      <HStack justify="space-between" mb={6}>
-        <Heading>UX Persona Generator</Heading>
-        <IconButton
-          aria-label="Create new persona"
-          icon={<AddIcon />}
-          onClick={handleCreatePersona}
-          colorScheme="blue"
-        />
-      </HStack>
+      <VStack spacing={6} align="stretch">
+        <Card>
+          <CardBody>
+            <FormControl>
+              <FormLabel>Product Description</FormLabel>
+              <Textarea
+                value={productDescription}
+                onChange={(e) => setProductDescription(e.target.value)}
+                placeholder="Describe your product and its target users..."
+              />
+            </FormControl>
+          </CardBody>
+        </Card>
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-        {personas.map((persona) => (
-          <Card
-            key={persona.id}
-            cursor="pointer"
-            onClick={() => handleViewPersona(persona)}
-            _hover={{ shadow: 'lg' }}
-          >
-            <CardBody>
-              <HStack spacing={4}>
-                <Avatar
-                  size="lg"
-                  src={persona.profilePicture}
-                  name={persona.name}
-                />
-                <VStack align="start">
-                  <Heading size="md">{persona.name}</Heading>
-                  <Text>{persona.occupation}</Text>
-                  <Text fontSize="sm" color="gray.500">
-                    {persona.location}
-                  </Text>
-                </VStack>
-              </HStack>
-            </CardBody>
-          </Card>
-        ))}
-      </SimpleGrid>
+        <HStack justify="space-between">
+          <Heading>UX Persona Generator</Heading>
+          <IconButton
+            aria-label="Create new persona"
+            icon={<AddIcon />}
+            onClick={handleCreatePersona}
+            colorScheme="blue"
+            isDisabled={!productDescription.trim()}
+          />
+        </HStack>
+
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+          {personas.map((persona) => (
+            <Card
+              key={persona.id}
+              cursor="pointer"
+              onClick={() => handleViewPersona(persona)}
+              _hover={{ shadow: 'lg' }}
+            >
+              <CardBody>
+                <HStack spacing={4}>
+                  <Avatar
+                    size="lg"
+                    src={persona.profilePicture}
+                    name={persona.name}
+                  />
+                  <VStack align="start">
+                    <Heading size="md">{persona.name}</Heading>
+                    <Text>{persona.occupation}</Text>
+                    <Text fontSize="sm" color="gray.500">
+                      {persona.location}
+                    </Text>
+                  </VStack>
+                </HStack>
+              </CardBody>
+            </Card>
+          ))}
+        </SimpleGrid>
+      </VStack>
 
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
@@ -258,23 +273,6 @@ export default function Home() {
           <ModalBody pb={6}>
             {isCreating ? (
               <VStack spacing={4} align="stretch">
-                <FormControl>
-                  <FormLabel>Product Description</FormLabel>
-                  <Textarea
-                    value={productDescription}
-                    onChange={(e) => setProductDescription(e.target.value)}
-                    placeholder="Describe your product and its target users..."
-                  />
-                </FormControl>
-                <Button
-                  colorScheme="blue"
-                  onClick={handleGeneratePersona}
-                  isLoading={isGenerating}
-                  mb={4}
-                >
-                  Generate Persona
-                </Button>
-
                 {Object.keys(newPersona).length > 2 && (
                   <>
                     <FormControl>
