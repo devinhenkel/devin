@@ -50,6 +50,13 @@ export default function Home() {
     return '';
   });
 
+  const [isDescriptionSaved, setIsDescriptionSaved] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem('productDescription');
+    }
+    return false;
+  });
+
   useEffect(() => {
     if (typeof window !== 'undefined' && productDescription) {
       localStorage.setItem('productDescription', productDescription);
@@ -123,6 +130,7 @@ export default function Home() {
                   colorScheme="blue"
                   onClick={() => {
                     localStorage.setItem('productDescription', productDescription);
+                    setIsDescriptionSaved(true);
                     toast({
                       title: 'Saved',
                       description: 'Product description has been saved',
@@ -147,7 +155,7 @@ export default function Home() {
             icon={<AddIcon />}
             onClick={onOpen}
             colorScheme="blue"
-            isDisabled={!productDescription.trim()}
+            isDisabled={!isDescriptionSaved}
           />
         </Box>
 
