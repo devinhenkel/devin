@@ -3,35 +3,28 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Heading,
-  SimpleGrid,
+  Button,
   Card,
   CardBody,
-  Text,
-  IconButton,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
-  VStack,
-  HStack,
-  Input,
-  Textarea,
-  Button,
+  Container,
   FormControl,
   FormLabel,
-  List,
-  ListItem,
-  ListIcon,
+  Heading,
+  IconButton,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  SimpleGrid,
+  Text,
+  Textarea,
+  VStack,
+  useDisclosure,
   useToast,
-  Spinner,
-  Avatar,
 } from '@chakra-ui/react';
-import { AddIcon, CheckIcon, CloseIcon, RepeatIcon } from '@chakra-ui/icons';
+import { AddIcon } from '@chakra-ui/icons';
 
 interface Persona {
   id: string;
@@ -64,14 +57,9 @@ export default function Home() {
   }, [productDescription]);
 
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isCreating, setIsCreating] = useState(false);
+  const [newPersona, setNewPersona] = useState<Partial<Persona>>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [newPersona, setNewPersona] = useState<Partial<Persona>>({
-    goals: [],
-    frustrations: [],
-  });
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
   const handleGeneratePersona = async () => {
@@ -152,8 +140,8 @@ export default function Home() {
           </CardBody>
         </Card>
 
-        <HStack justify="space-between">
-          <Heading>UX Persona Generator</Heading>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Heading size="lg">UX Persona Generator</Heading>
           <IconButton
             aria-label="Create new persona"
             icon={<AddIcon />}
@@ -161,10 +149,16 @@ export default function Home() {
             colorScheme="blue"
             isDisabled={!productDescription.trim()}
           />
-        </HStack>
+        </Box>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-          {/* PLACEHOLDER: Persona cards will be rendered here */}
+          {personas.map((persona) => (
+            <Card key={persona.id}>
+              <CardBody>
+                <Text>{persona.name}</Text>
+              </CardBody>
+            </Card>
+          ))}
         </SimpleGrid>
 
         <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -173,30 +167,24 @@ export default function Home() {
             <ModalHeader>Create New Persona</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
-              <VStack spacing={4} align="stretch">
-                {Object.keys(newPersona).length <= 2 ? (
-                  <FormControl>
-                    <FormLabel>Persona Description</FormLabel>
-                    <VStack spacing={2}>
-                      <Textarea
-                        placeholder="Describe this persona's unique characteristics..."
-                        value={newPersona.description || ''}
-                        onChange={(e) => setNewPersona({ ...newPersona, description: e.target.value })}
-                      />
-                      <Button
-                        colorScheme="blue"
-                        onClick={handleGeneratePersona}
-                        isLoading={isGenerating}
-                        alignSelf="flex-end"
-                      >
-                        Generate Persona
-                      </Button>
-                    </VStack>
-                  </FormControl>
-                ) : (
-                  <Text>Form fields will be shown here after generation</Text>
-                )}
-              </VStack>
+              <FormControl>
+                <FormLabel>Persona Description</FormLabel>
+                <VStack spacing={2}>
+                  <Textarea
+                    placeholder="Describe this persona's unique characteristics..."
+                    value={newPersona.description || ''}
+                    onChange={(e) => setNewPersona({ ...newPersona, description: e.target.value })}
+                  />
+                  <Button
+                    colorScheme="blue"
+                    onClick={handleGeneratePersona}
+                    isLoading={isGenerating}
+                    alignSelf="flex-end"
+                  >
+                    Generate Persona
+                  </Button>
+                </VStack>
+              </FormControl>
             </ModalBody>
           </ModalContent>
         </Modal>
