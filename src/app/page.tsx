@@ -59,6 +59,12 @@ export default function Home() {
   });
 
   useEffect(() => {
+    const saved = localStorage.getItem('productDescription');
+    setIsDescriptionSaved(!!saved && saved.trim().length > 0);
+    console.log('Initial localStorage check:', !!saved && saved.trim().length > 0);
+  }, []);
+
+  useEffect(() => {
     console.log('Product description changed:', productDescription);
     setIsDescriptionSaved(!!productDescription && productDescription.trim().length > 0);
   }, [productDescription]);
@@ -131,6 +137,7 @@ export default function Home() {
 
     console.log('Saving description:', productDescription);
     localStorage.setItem('productDescription', productDescription);
+    setIsDescriptionSaved(true);
 
     toast({
       title: 'Saved',
@@ -173,6 +180,7 @@ export default function Home() {
             onClick={onOpen}
             colorScheme="blue"
             isDisabled={!isDescriptionSaved}
+            data-testid="create-persona-button"
           >
             Create New Persona
           </Button>
