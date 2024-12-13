@@ -10,7 +10,6 @@ import {
   FormControl,
   FormLabel,
   Heading,
-  IconButton,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -159,13 +158,14 @@ export default function Home() {
 
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Heading size="lg">UX Persona Generator</Heading>
-          <IconButton
-            aria-label="Create new persona"
-            icon={<AddIcon />}
+          <Button
+            leftIcon={<AddIcon />}
             onClick={onOpen}
             colorScheme="blue"
             isDisabled={!isDescriptionSaved}
-          />
+          >
+            Create New Persona
+          </Button>
         </Box>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
