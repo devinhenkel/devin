@@ -59,6 +59,11 @@ export default function Home() {
   });
 
   useEffect(() => {
+    console.log('Product description changed:', productDescription);
+    setIsDescriptionSaved(!!productDescription && productDescription.trim().length > 0);
+  }, [productDescription]);
+
+  useEffect(() => {
     console.log('isDescriptionSaved changed:', isDescriptionSaved);
   }, [isDescriptionSaved]);
 
@@ -126,9 +131,6 @@ export default function Home() {
 
     console.log('Saving description:', productDescription);
     localStorage.setItem('productDescription', productDescription);
-    console.log('Setting isDescriptionSaved to true');
-    setIsDescriptionSaved(true);
-    console.log('Current isDescriptionSaved state:', isDescriptionSaved);
 
     toast({
       title: 'Saved',
