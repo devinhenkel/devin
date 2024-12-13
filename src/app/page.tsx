@@ -179,7 +179,7 @@ export default function Home() {
             leftIcon={<AddIcon />}
             onClick={onOpen}
             colorScheme="blue"
-            isDisabled={!isDescriptionSaved}
+            disabled={!isDescriptionSaved}
             data-testid="create-persona-button"
           >
             Create New Persona
