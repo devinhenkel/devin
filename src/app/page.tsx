@@ -120,8 +120,12 @@ export default function Home() {
       return;
     }
 
+    console.log('Saving description:', productDescription);
     localStorage.setItem('productDescription', productDescription);
+    console.log('Setting isDescriptionSaved to true');
     setIsDescriptionSaved(true);
+    console.log('Current isDescriptionSaved state:', isDescriptionSaved);
+
     toast({
       title: 'Saved',
       description: 'Product description has been saved',
