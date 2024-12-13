@@ -58,6 +58,10 @@ export default function Home() {
     return false;
   });
 
+  useEffect(() => {
+    console.log('isDescriptionSaved changed:', isDescriptionSaved);
+  }, [isDescriptionSaved]);
+
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [newPersona, setNewPersona] = useState<Partial<Persona>>({});
   const [isGenerating, setIsGenerating] = useState(false);
