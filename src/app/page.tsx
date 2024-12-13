@@ -45,23 +45,19 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://persona-gene
 export default function Home() {
   const [productDescription, setProductDescription] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('productDescription') || '';
+      const saved = localStorage.getItem('productDescription');
+      return saved || '';
     }
     return '';
   });
 
   const [isDescriptionSaved, setIsDescriptionSaved] = useState(() => {
     if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('productDescription');
+      const saved = localStorage.getItem('productDescription');
+      return !!saved && saved.trim().length > 0;
     }
     return false;
   });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && productDescription) {
-      localStorage.setItem('productDescription', productDescription);
-    }
-  }, [productDescription]);
 
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [newPersona, setNewPersona] = useState<Partial<Persona>>({});
@@ -113,6 +109,29 @@ export default function Home() {
     }
   };
 
+  const handleSaveDescription = () => {
+    if (!productDescription.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a product description',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    localStorage.setItem('productDescription', productDescription);
+    setIsDescriptionSaved(true);
+    toast({
+      title: 'Saved',
+      description: 'Product description has been saved',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   return (
     <Container maxW="container.xl" py={8}>
       <VStack spacing={6} align="stretch">
@@ -128,17 +147,7 @@ export default function Home() {
                 />
                 <Button
                   colorScheme="blue"
-                  onClick={() => {
-                    localStorage.setItem('productDescription', productDescription);
-                    setIsDescriptionSaved(true);
-                    toast({
-                      title: 'Saved',
-                      description: 'Product description has been saved',
-                      status: 'success',
-                      duration: 3000,
-                      isClosable: true,
-                    });
-                  }}
+                  onClick={handleSaveDescription}
                   alignSelf="flex-end"
                 >
                   Save Description
