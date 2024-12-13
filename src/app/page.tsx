@@ -185,6 +185,12 @@ export default function Home() {
                   </Button>
                 </VStack>
               </FormControl>
+              {Object.keys(newPersona).length > 1 && (
+                <VStack spacing={4} mt={4}>
+                  <Text>Generated Persona Details:</Text>
+                  {/* We'll add the generated persona details display here later */}
+                </VStack>
+              )}
             </ModalBody>
           </ModalContent>
         </Modal>
