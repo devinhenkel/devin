@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import PersonaCard from './PersonaCard';
+
 import { Persona } from '../types/persona';
 
 interface CreatePersonaModalProps {

@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Persona } from '../types/persona';
 
 interface PersonaCardProps {
@@ -10,10 +11,12 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
     <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
       <div className="flex items-center mb-4">
         {persona.avatar && (
-          <img
+          <Image
             src={persona.avatar}
             alt={persona.name}
-            className="w-16 h-16 rounded-full mr-4"
+            width={64}
+            height={64}
+            className="rounded-full mr-4"
           />
         )}
         <div>

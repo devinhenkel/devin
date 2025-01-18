@@ -3,10 +3,10 @@ import { Persona } from '../../../types/persona';
 
 export async function POST(request: Request) {
   try {
-    const { description } = await request.json();
+    await request.json(); // Parse request body but not using description yet
 
-    // TODO: Replace with actual OpenAI API call
-    // For now, generate a mock persona based on the description
+    // TODO: Replace with actual OpenAI API call using the description
+    // For now, generate a mock persona
     const mockPersona: Persona = {
       id: Math.random().toString(36).substr(2, 9),
       name: 'Generated User',
